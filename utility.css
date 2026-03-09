@@ -1,62 +1,111 @@
-.border
-{
-    border: 2px solid rgb(0, 0, 0);
+/* ============================================
+   SPOTIFY CLONE — utility.css
+   ============================================ */
+
+.border {
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.flex
-{
+.flex {
     display: flex;
-    
 }
 
-.justify-center
-{
+.flex-col {
+    flex-direction: column;
+}
+
+.justify-center {
     justify-content: center;
 }
 
-.items-center
-{
+.justify-between {
+    justify-content: space-between;
+}
+
+.items-center {
     align-items: center;
 }
 
-.bg_black
-{
-    background-color: black;
+.bg_black {
+    background-color: #000000;
     color: white;
 }
 
-.link
-{
+.bg_grey {
+    background-color: #121212;
+    color: white;
+}
+
+.link {
     color: white;
     text-decoration: none;
+    transition: color 0.2s;
 }
 
-.invert
-{
+.link:hover {
+    color: #1DB954;
+    text-decoration: underline;
+}
+
+.invert {
     filter: invert(1);
 }
 
-.bg_grey
-{
-    background-color: #121212;
+.rounded {
+    border-radius: 8px;
 }
 
-.rounded
-{
-    border-radius: 13px;
+.rounded-full {
+    border-radius: 50%;
 }
 
-.m-1
-{
+.m-1 {
     margin: 5px;
 }
 
-.p-1
-{
+.m-2 {
+    margin: 10px;
+}
+
+.p-1 {
     padding: 10px;
 }
 
-.space_btw
-{
+.p-2 {
+    padding: 20px;
+}
+
+.space_btw {
     justify-content: space-between;
+}
+
+.text-muted {
+    color: #b3b3b3;
+}
+
+.text-green {
+    color: #1DB954;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
