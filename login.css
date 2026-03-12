@@ -1,0 +1,211 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── LOGO ── */
+        .logo {
+            padding: 40px 0 32px;
+        }
+
+        .logo img {
+            width: 130px;
+            filter: invert(1);
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: #121212;
+            border-radius: 8px;
+            padding: 40px 48px 48px;
+            width: 100%;
+            max-width: 430px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h1 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 32px;
+            letter-spacing: -0.5px;
+        }
+
+        /* ── DIVIDER ── */
+        .divider {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid #292929;
+        }
+
+        .divider span {
+            font-size: 13px;
+            color: #727272;
+            font-weight: 700;
+        }
+
+        /* ── FORM FIELDS ── */
+        .field {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 13px 16px;
+            background: #121212;
+            border: 1px solid #727272;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .field input:focus {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
+        }
+
+        .field input::placeholder {
+            color: #727272;
+        }
+
+        /* ── FORGOT PASSWORD ── */
+        .forgot {
+            width: 100%;
+            text-align: left;
+            font-size: 13px;
+            color: #fff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 700;
+            margin-bottom: 24px;
+            transition: color 0.15s;
+        }
+
+        .forgot:hover { color: #1DB954; }
+
+        /* ── LOGIN BUTTON ── */
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #1DB954;
+            border: none;
+            border-radius: 30px;
+            color: #000;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            transition: background 0.15s, transform 0.1s;
+            margin-bottom: 24px;
+        }
+
+        .login-btn:hover {
+            background: #1ed760;
+            transform: scale(1.02);
+        }
+
+        .login-btn:active { transform: scale(0.98); }
+
+        /* ── ERROR MESSAGE ── */
+        .error-msg {
+            width: 100%;
+            background: #e91429;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .error-msg.show { display: block; }
+
+        /* ── SIGNUP LINK ── */
+        .signup-link {
+            width: 100%;
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid #292929;
+            font-size: 15px;
+            color: #727272;
+        }
+
+        .signup-link a {
+            color: #fff;
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .signup-link a:hover { color: #1DB954; }
+
+        /* ── FOOTER ── */
+        footer {
+            margin-top: 32px;
+            padding-bottom: 32px;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 11px;
+            color: #727272;
+            line-height: 1.8;
+        }
+
+        footer a {
+            color: #727272;
+            text-decoration: underline;
+        }
+
+        footer a:hover { color: #fff; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 480px) {
+            .card {
+                padding: 32px 24px 40px;
+                border-radius: 0;
+            }
+            .card h1 { font-size: 22px; }
+        }

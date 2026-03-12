@@ -12,7 +12,8 @@ function formatTime(seconds) {
 async function song_fetch(folder) {
     currfolder = folder;
 
-    let response = await fetch(`http://127.0.0.1:5500/spotify/${folder}/`);
+    // ✅ Relative path — local + netlify dono pe kaam karega
+    let response = await fetch(`/${folder}/`);
     let htmlText = await response.text();
 
     let tempDiv = document.createElement("div");
@@ -57,7 +58,8 @@ async function song_fetch(folder) {
 }
 
 function playMusic(track, pause = false) {
-    currentSong.src = `http://127.0.0.1:5500/spotify/${currfolder}/` + track;
+    // ✅ Relative path
+    currentSong.src = `/${currfolder}/` + track;
     document.querySelector(".songinfo").textContent = decodeURIComponent(track.replace(".mp3", ""));
     document.querySelector(".songtime").textContent = "00:00 / 00:00";
 
@@ -70,7 +72,8 @@ function playMusic(track, pause = false) {
 }
 
 async function displayAlbums() {
-    let response = await fetch(`http://127.0.0.1:5500/spotify/songs/`);
+    // ✅ Relative path
+    let response = await fetch(`/songs/`);
     let htmlText = await response.text();
 
     let tempDiv = document.createElement("div");
@@ -82,25 +85,18 @@ async function displayAlbums() {
 
     for (let link of allLinks) {
         let href = link.getAttribute("href");
-        // href = "/spotify/songs/ncs"  (without trailing slash)
-
-        // ✅ FIX: /songs/ ke baad kuch aana chahiye — folder naam
-        // Skip: ".." link = "/spotify" — songs ka parent
-        // Skip: songs folder khud = "/spotify/songs"
         if (!href) continue;
-        if (!href.includes("/songs/")) continue;  // sirf songs ke andar wale folders
+        if (!href.includes("/songs/")) continue;
 
-        // Folder naam nikalo — last part
         let parts = href.split("/").filter(p => p !== "");
         let folder = parts[parts.length - 1];
-
-        // "songs" naam aaye toh skip (parent folder)
         if (folder === "songs") continue;
 
         console.log("📁 Folder mila:", folder);
 
         try {
-            let infoRes = await fetch(`http://127.0.0.1:5500/spotify/songs/${folder}/info.json`);
+            // ✅ Relative path
+            let infoRes = await fetch(`/songs/${folder}/info.json`);
             if (!infoRes.ok) {
                 console.log(`❌ info.json nahi mila: ${folder}`);
                 continue;
@@ -117,7 +113,7 @@ async function displayAlbums() {
                             <path d="M18.8906 12.846C18.5371 14.189 16.8667 15.138 13.5257 17.0361C10.296 18.8709 8.6812 19.7884 7.37983 19.4196C6.8418 19.2671 6.35159 18.9776 5.95624 18.5787C5 17.6139 5 15.7426 5 12C5 8.2574 5 6.3861 5.95624 5.42132C6.35159 5.02245 6.8418 4.73288 7.37983 4.58042C8.6812 4.21165 10.296 5.12907 13.5257 6.96393C16.8667 8.86197 18.5371 9.811 18.8906 11.154C19.0365 11.7084 19.0365 12.2916 18.8906 12.846Z" fill="#000"/>
                         </svg>
                     </div>
-                    <img class="rounded" src="http://127.0.0.1:5500/spotify/songs/${folder}/cover.jpg" alt="${info.title}">
+                    <img class="rounded" src="/songs/${folder}/cover.jpg" alt="${info.title}">
                     <h2>${info.title}</h2>
                     <p>${info.description}</p>
                 </div>
@@ -128,7 +124,6 @@ async function displayAlbums() {
         }
     }
 
-    // Card click → us folder ke songs sidebar mein load karo
     document.querySelectorAll(".card").forEach(card => {
         card.addEventListener("click", async () => {
             let folder = card.dataset.folder;

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify - Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+    <div class="logo">
+        <img src="logo.svg" alt="Spotify">
+    </div>
+
+    <div class="card">
+        <h1>Log in to Spotify</h1>
+
+        <div class="divider">
+            <hr><span>or</span><hr>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="field">
+            <label>Email or username</label>
+            <input type="text" id="emailInput" placeholder="Email or username">
+        </div>
+
+        <div class="field">
+            <label>Password</label>
+            <input type="password" id="passInput" placeholder="Password">
+        </div>
+
+        <span class="forgot">Forgot your password?</span>
+
+        <button class="login-btn" id="loginBtn">Log In</button>
+
+        <div class="signup-link">
+            Don't have an account? <a href="#">Sign up for Spotify</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>
+            <a href="#">Privacy Policy</a> &nbsp;•&nbsp;
+            <a href="#">Terms of Use</a> &nbsp;•&nbsp;
+            <a href="#">Cookies</a>
+        </p>
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+</html>
