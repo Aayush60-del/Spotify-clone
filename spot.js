@@ -39,7 +39,6 @@ async function song_fetch(folder) {
         ul.appendChild(li);
         li.addEventListener("click", () => {
             playMusic(li.dataset.track);
-            // Mobile pe sidebar close ho jaye song select karne ke baad
             if (window.innerWidth <= 899) closeSidebar();
         });
     }
@@ -49,7 +48,6 @@ async function song_fetch(folder) {
 }
 
 function playMusic(track, pause = false) {
-    // ✅ FIX: spaces wale folder/track names ke liye
     let encodedFolder = currfolder.split(" ").join("%20");
     let encodedTrack = track.split(" ").join("%20");
     currentSong.src = `/songs/${encodedFolder}/${encodedTrack}`;
@@ -57,8 +55,6 @@ function playMusic(track, pause = false) {
     document.querySelector(".songinfo").textContent =
         decodeURIComponent(track.replace(".mp3", ""));
     document.querySelector(".songtime").textContent = "00:00 / 00:00";
-
-    // ✅ FIX: circle reset karo har nayi song pe
     document.querySelector(".circle_").style.left = "0%";
 
     if (!pause) {
@@ -130,10 +126,18 @@ function closeSidebar() {
 
 async function main() {
 
-    // ✅ Cards PEHLE dikho
+    // ✅ Cards pehle dikho
     await displayAlbums();
 
-    // ✅ Phir pehla folder load karo
+    // ✅ Saved volume load karo — localStorage se
+    let savedVolume = localStorage.getItem("spotifyVolume");
+    if (savedVolume !== null) {
+        currentSong.volume = parseInt(savedVolume) / 100;
+        document.querySelector(".range input").value = savedVolume;
+        console.log("🔊 Saved volume loaded:", savedVolume);
+    }
+
+    // ✅ Pehla folder load karo
     try {
         let rootRes = await fetch("/songs.json");
         let rootData = await rootRes.json();
@@ -188,21 +192,24 @@ async function main() {
         else playMusic(songs[0]);
     });
 
-    // Volume
+    // ✅ Volume — change hone pe localStorage mein save karo
     document.querySelector(".range input").addEventListener("input", (e) => {
         currentSong.volume = parseInt(e.target.value) / 100;
+        localStorage.setItem("spotifyVolume", e.target.value); // ✅ SAVE
     });
 
-    // Mute / Unmute
+    // ✅ Mute / Unmute — localStorage update karo
     document.querySelector(".volume > img").addEventListener("click", (e) => {
         if (e.target.src.includes("volume.svg")) {
             e.target.src = e.target.src.replace("volume.svg", "mute.svg");
             currentSong.volume = 0;
             document.querySelector(".range input").value = 0;
+            localStorage.setItem("spotifyVolume", "0"); // ✅ SAVE
         } else {
             e.target.src = e.target.src.replace("mute.svg", "volume.svg");
             currentSong.volume = 0.7;
             document.querySelector(".range input").value = 70;
+            localStorage.setItem("spotifyVolume", "70"); // ✅ SAVE
         }
     });
 
