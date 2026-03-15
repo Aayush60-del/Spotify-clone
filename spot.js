@@ -9,15 +9,12 @@ function formatTime(seconds) {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-// ── song_fetch(folder) ──────────────────────────
-// Ab folder listing nahi — songs.json se songs lo
 async function song_fetch(folder) {
     currfolder = folder;
 
-    // ✅ songs.json se songs ki list lo
     let response = await fetch(`/songs/${folder}/songs.json`);
     let data = await response.json();
-    let songList = data.songs; // ["song1.mp3", "song2.mp3"]
+    let songList = data.songs;
 
     console.log("✅ Songs mile:", songList);
 
@@ -47,10 +44,10 @@ async function song_fetch(folder) {
     return songList;
 }
 
-// ── playMusic(track) ────────────────────────────
 function playMusic(track, pause = false) {
-    currentSong.src = `/songs/${currfolder}/` + track;
-    document.querySelector(".songinfo").textContent = decodeURIComponent(track.replace(".mp3", ""));
+    currentSong.src = `/songs/${currfolder}/${track}`;
+    document.querySelector(".songinfo").textContent =
+        decodeURIComponent(track.replace(".mp3", ""));
     document.querySelector(".songtime").textContent = "00:00 / 00:00";
 
     if (!pause) {
@@ -61,14 +58,10 @@ function playMusic(track, pause = false) {
     }
 }
 
-// ── displayAlbums() ─────────────────────────────
-// Ab folder listing nahi — songs.json se folders ki list lo
 async function displayAlbums() {
-
-    // ✅ Root songs.json se folders ki list lo
     let response = await fetch("/songs.json");
     let data = await response.json();
-    let folders = data.folders; // ["ncs", "english"]
+    let folders = data.folders;
 
     console.log("📁 Folders mile:", folders);
 
@@ -77,12 +70,8 @@ async function displayAlbums() {
 
     for (let folder of folders) {
         try {
-            // Har folder ka info.json lo
             let infoRes = await fetch(`/songs/${folder}/info.json`);
-            if (!infoRes.ok) {
-                console.log(`❌ info.json nahi mila: ${folder}`);
-                continue;
-            }
+            if (!infoRes.ok) continue;
             let info = await infoRes.json();
             console.log("✅ Card bana:", info.title);
 
@@ -104,7 +93,6 @@ async function displayAlbums() {
         }
     }
 
-    // Card click → us folder ke songs sidebar mein load karo
     document.querySelectorAll(".card").forEach(card => {
         card.addEventListener("click", async () => {
             let folder = card.dataset.folder;
@@ -126,11 +114,24 @@ function closeSidebar() {
 }
 
 async function main() {
-    // App start → pehle folder ke songs load karo
-    songs = await song_fetch("ncs");
-    if (songs.length > 0) playMusic(songs[0], true);
 
+    // ✅ displayAlbums() PEHLE chalaao — cards turant dikhen
     await displayAlbums();
+
+    // ✅ Phir songs load karo — try/catch se error pe bhi cards safe rahenge
+    try {
+        let rootRes = await fetch("/songs.json");
+        let rootData = await rootRes.json();
+        let firstFolder = rootData.folders[0];
+
+        console.log("🚀 Starting with folder:", firstFolder);
+
+        songs = await song_fetch(firstFolder);
+        if (songs.length > 0) playMusic(songs[0], true);
+
+    } catch (err) {
+        console.log("Song load error:", err.message);
+    }
 
     // Play / Pause
     play.addEventListener("click", () => {
@@ -161,7 +162,7 @@ async function main() {
 
     // Previous
     previous.addEventListener("click", () => {
-        let currentTrack = currentSong.src.split("/").slice(-1)[0];
+        let currentTrack = decodeURIComponent(currentSong.src.split("/").slice(-1)[0]);
         let idx = songs.indexOf(currentTrack);
         if (idx > 0) playMusic(songs[idx - 1]);
         else playMusic(songs[0]);
@@ -169,7 +170,7 @@ async function main() {
 
     // Next
     next.addEventListener("click", () => {
-        let currentTrack = currentSong.src.split("/").slice(-1)[0];
+        let currentTrack = decodeURIComponent(currentSong.src.split("/").slice(-1)[0]);
         let idx = songs.indexOf(currentTrack);
         if (idx < songs.length - 1) playMusic(songs[idx + 1]);
         else playMusic(songs[0]);
@@ -200,7 +201,7 @@ async function main() {
 
     // Auto next
     currentSong.addEventListener("ended", () => {
-        let currentTrack = currentSong.src.split("/").slice(-1)[0];
+        let currentTrack = decodeURIComponent(currentSong.src.split("/").slice(-1)[0]);
         let idx = songs.indexOf(currentTrack);
         if (idx < songs.length - 1) playMusic(songs[idx + 1]);
         else playMusic(songs[0]);
