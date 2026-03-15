@@ -37,7 +37,11 @@ async function song_fetch(folder) {
             </div>
         `;
         ul.appendChild(li);
-        li.addEventListener("click", () => playMusic(li.dataset.track));
+        li.addEventListener("click", () => {
+            playMusic(li.dataset.track);
+            // Mobile pe sidebar close ho jaye song select karne ke baad
+            if (window.innerWidth <= 899) closeSidebar();
+        });
     }
 
     songs = songList;
@@ -45,10 +49,17 @@ async function song_fetch(folder) {
 }
 
 function playMusic(track, pause = false) {
-    currentSong.src = `/songs/${currfolder}/${track}`;
+    // ✅ FIX: spaces wale folder/track names ke liye
+    let encodedFolder = currfolder.split(" ").join("%20");
+    let encodedTrack = track.split(" ").join("%20");
+    currentSong.src = `/songs/${encodedFolder}/${encodedTrack}`;
+
     document.querySelector(".songinfo").textContent =
         decodeURIComponent(track.replace(".mp3", ""));
     document.querySelector(".songtime").textContent = "00:00 / 00:00";
+
+    // ✅ FIX: circle reset karo har nayi song pe
+    document.querySelector(".circle_").style.left = "0%";
 
     if (!pause) {
         currentSong.play();
@@ -70,8 +81,12 @@ async function displayAlbums() {
 
     for (let folder of folders) {
         try {
-            let infoRes = await fetch(`/songs/${folder}/info.json`);
-            if (!infoRes.ok) continue;
+            let encodedFolder = folder.split(" ").join("%20");
+            let infoRes = await fetch(`/songs/${encodedFolder}/info.json`);
+            if (!infoRes.ok) {
+                console.log(`❌ info.json nahi mila: ${folder}`);
+                continue;
+            }
             let info = await infoRes.json();
             console.log("✅ Card bana:", info.title);
 
@@ -83,7 +98,7 @@ async function displayAlbums() {
                             <path d="M18.8906 12.846C18.5371 14.189 16.8667 15.138 13.5257 17.0361C10.296 18.8709 8.6812 19.7884 7.37983 19.4196C6.8418 19.2671 6.35159 18.9776 5.95624 18.5787C5 17.6139 5 15.7426 5 12C5 8.2574 5 6.3861 5.95624 5.42132C6.35159 5.02245 6.8418 4.73288 7.37983 4.58042C8.6812 4.21165 10.296 5.12907 13.5257 6.96393C16.8667 8.86197 18.5371 9.811 18.8906 11.154C19.0365 11.7084 19.0365 12.2916 18.8906 12.846Z" fill="#000"/>
                         </svg>
                     </div>
-                    <img class="rounded" src="/songs/${folder}/cover.jpg" alt="${info.title}">
+                    <img class="rounded" src="/songs/${encodedFolder}/cover.jpg" alt="${info.title}">
                     <h2>${info.title}</h2>
                     <p>${info.description}</p>
                 </div>
@@ -115,20 +130,17 @@ function closeSidebar() {
 
 async function main() {
 
-    // ✅ displayAlbums() PEHLE chalaao — cards turant dikhen
+    // ✅ Cards PEHLE dikho
     await displayAlbums();
 
-    // ✅ Phir songs load karo — try/catch se error pe bhi cards safe rahenge
+    // ✅ Phir pehla folder load karo
     try {
         let rootRes = await fetch("/songs.json");
         let rootData = await rootRes.json();
         let firstFolder = rootData.folders[0];
-
-        console.log("🚀 Starting with folder:", firstFolder);
-
+        console.log("🚀 Starting with:", firstFolder);
         songs = await song_fetch(firstFolder);
         if (songs.length > 0) playMusic(songs[0], true);
-
     } catch (err) {
         console.log("Song load error:", err.message);
     }
