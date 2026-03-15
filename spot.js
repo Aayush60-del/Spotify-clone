@@ -2,6 +2,10 @@ let currentSong = new Audio();
 let songs = [];
 let currfolder = "";
 
+// ✅ Saare songs store karo search ke liye
+// Format: [{ name: "Aphrodite.mp3", folder: "Arjan Dhillon", display: "Aphrodite" }]
+let allSongs = [];
+
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return "00:00";
     const mins = Math.floor(seconds / 60);
@@ -47,7 +51,10 @@ async function song_fetch(folder) {
     return songList;
 }
 
-function playMusic(track, pause = false) {
+function playMusic(track, pause = false, folder = null) {
+    // ✅ Search se direct folder pass ho sakta hai
+    if (folder) currfolder = folder;
+
     let encodedFolder = currfolder.split(" ").join("%20");
     let encodedTrack = track.split(" ").join("%20");
     currentSong.src = `/songs/${encodedFolder}/${encodedTrack}`;
@@ -75,16 +82,30 @@ async function displayAlbums() {
     let cardcontainer = document.querySelector(".cardcontainer");
     cardcontainer.innerHTML = "";
 
+    // ✅ allSongs array reset karo
+    allSongs = [];
+
     for (let folder of folders) {
         try {
             let encodedFolder = folder.split(" ").join("%20");
             let infoRes = await fetch(`/songs/${encodedFolder}/info.json`);
-            if (!infoRes.ok) {
-                console.log(`❌ info.json nahi mila: ${folder}`);
-                continue;
-            }
+            if (!infoRes.ok) continue;
             let info = await infoRes.json();
-            console.log("✅ Card bana:", info.title);
+
+            // ✅ Us folder ke songs bhi load karo allSongs mein
+            try {
+                let songsRes = await fetch(`/songs/${encodedFolder}/songs.json`);
+                let songsData = await songsRes.json();
+                for (let songName of songsData.songs) {
+                    allSongs.push({
+                        name: songName,
+                        folder: folder,
+                        display: decodeURIComponent(songName.replace(".mp3", "")),
+                        cover: `/songs/${encodedFolder}/cover.jpg`,
+                        albumTitle: info.title
+                    });
+                }
+            } catch(e) {}
 
             cardcontainer.innerHTML += `
                 <div data-folder="${folder}" class="card rounded">
@@ -107,11 +128,99 @@ async function displayAlbums() {
     document.querySelectorAll(".card").forEach(card => {
         card.addEventListener("click", async () => {
             let folder = card.dataset.folder;
-            console.log("🎵 Card clicked:", folder);
             songs = await song_fetch(folder);
             if (songs.length > 0) playMusic(songs[0], true);
         });
     });
+}
+
+// ✅ SEARCH FUNCTION
+function setupSearch() {
+    const searchInput  = document.getElementById("searchInput");
+    const searchResults = document.getElementById("searchResults");
+    const searchClear  = document.getElementById("searchClear");
+
+    // Input pe type karne pe search karo
+    searchInput.addEventListener("input", () => {
+        let query = searchInput.value.trim().toLowerCase();
+
+        // Clear button show/hide
+        if (query.length > 0) {
+            searchClear.classList.add("visible");
+        } else {
+            searchClear.classList.remove("visible");
+            searchResults.classList.remove("open");
+            searchResults.innerHTML = "";
+            return;
+        }
+
+        // allSongs mein se filter karo
+        let results = allSongs.filter(song =>
+            song.display.toLowerCase().includes(query) ||
+            song.folder.toLowerCase().includes(query) ||
+            song.albumTitle.toLowerCase().includes(query)
+        );
+
+        // Results dikhao
+        searchResults.innerHTML = "";
+
+        if (results.length === 0) {
+            searchResults.innerHTML = `<div class="search-no-results">No results for "${query}"</div>`;
+        } else {
+            results.forEach(song => {
+                let item = document.createElement("div");
+                item.className = "search-result-item";
+                item.innerHTML = `
+                    <img src="${song.cover}" alt="${song.display}">
+                    <div class="search-result-info">
+                        <div class="search-result-name">${song.display}</div>
+                        <div class="search-result-folder">${song.albumTitle}</div>
+                    </div>
+                    <div class="search-result-play">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="black">
+                            <path d="M5 3l14 9-14 9V3z"/>
+                        </svg>
+                    </div>
+                `;
+
+                // Click pe song bajao
+                item.addEventListener("click", async () => {
+                    // Pehle us folder ke songs load karo sidebar mein
+                    songs = await song_fetch(song.folder);
+                    // Phir woh specific song bajao
+                    playMusic(song.name, false, song.folder);
+                    // Search band karo
+                    closeSearch();
+                });
+
+                searchResults.appendChild(item);
+            });
+        }
+
+        searchResults.classList.add("open");
+    });
+
+    // Clear button
+    searchClear.addEventListener("click", closeSearch);
+
+    // Bahar click karne pe search band karo
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-wrap")) {
+            searchResults.classList.remove("open");
+        }
+    });
+
+    // Escape key se band karo
+    searchInput.addEventListener("keydown", (e) => {
+        if (e.code === "Escape") closeSearch();
+    });
+}
+
+function closeSearch() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("searchResults").classList.remove("open");
+    document.getElementById("searchResults").innerHTML = "";
+    document.getElementById("searchClear").classList.remove("visible");
 }
 
 function openSidebar() {
@@ -126,23 +235,23 @@ function closeSidebar() {
 
 async function main() {
 
-    // ✅ Cards pehle dikho
     await displayAlbums();
 
-    // ✅ Saved volume load karo — localStorage se
+    // ✅ Search setup karo
+    setupSearch();
+
+    // Saved volume load karo
     let savedVolume = localStorage.getItem("spotifyVolume");
     if (savedVolume !== null) {
         currentSong.volume = parseInt(savedVolume) / 100;
         document.querySelector(".range input").value = savedVolume;
-        console.log("🔊 Saved volume loaded:", savedVolume);
     }
 
-    // ✅ Pehla folder load karo
+    // Pehla folder load karo
     try {
         let rootRes = await fetch("/songs.json");
         let rootData = await rootRes.json();
         let firstFolder = rootData.folders[0];
-        console.log("🚀 Starting with:", firstFolder);
         songs = await song_fetch(firstFolder);
         if (songs.length > 0) playMusic(songs[0], true);
     } catch (err) {
@@ -192,24 +301,24 @@ async function main() {
         else playMusic(songs[0]);
     });
 
-    // ✅ Volume — change hone pe localStorage mein save karo
+    // Volume
     document.querySelector(".range input").addEventListener("input", (e) => {
         currentSong.volume = parseInt(e.target.value) / 100;
-        localStorage.setItem("spotifyVolume", e.target.value); // ✅ SAVE
+        localStorage.setItem("spotifyVolume", e.target.value);
     });
 
-    // ✅ Mute / Unmute — localStorage update karo
+    // Mute / Unmute
     document.querySelector(".volume > img").addEventListener("click", (e) => {
         if (e.target.src.includes("volume.svg")) {
             e.target.src = e.target.src.replace("volume.svg", "mute.svg");
             currentSong.volume = 0;
             document.querySelector(".range input").value = 0;
-            localStorage.setItem("spotifyVolume", "0"); // ✅ SAVE
+            localStorage.setItem("spotifyVolume", "0");
         } else {
             e.target.src = e.target.src.replace("mute.svg", "volume.svg");
             currentSong.volume = 0.7;
             document.querySelector(".range input").value = 70;
-            localStorage.setItem("spotifyVolume", "70"); // ✅ SAVE
+            localStorage.setItem("spotifyVolume", "70");
         }
     });
 
