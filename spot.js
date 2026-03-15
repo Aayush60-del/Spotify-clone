@@ -9,25 +9,15 @@ function formatTime(seconds) {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
+// ── song_fetch(folder) ──────────────────────────
+// Ab folder listing nahi — songs.json se songs lo
 async function song_fetch(folder) {
     currfolder = folder;
 
-    // ✅ Relative path — local + netlify dono pe kaam karega
-    let response = await fetch(`/${folder}/`);
-    let htmlText = await response.text();
-
-    let tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlText;
-    let allLinks = tempDiv.getElementsByTagName("a");
-
-    let songList = [];
-    for (let link of allLinks) {
-        if (link.href.endsWith(".mp3")) {
-            let parts = link.href.split("/");
-            let filename = parts[parts.length - 1];
-            songList.push(filename);
-        }
-    }
+    // ✅ songs.json se songs ki list lo
+    let response = await fetch(`/songs/${folder}/songs.json`);
+    let data = await response.json();
+    let songList = data.songs; // ["song1.mp3", "song2.mp3"]
 
     console.log("✅ Songs mile:", songList);
 
@@ -57,9 +47,9 @@ async function song_fetch(folder) {
     return songList;
 }
 
+// ── playMusic(track) ────────────────────────────
 function playMusic(track, pause = false) {
-    // ✅ Relative path
-    currentSong.src = `/${currfolder}/` + track;
+    currentSong.src = `/songs/${currfolder}/` + track;
     document.querySelector(".songinfo").textContent = decodeURIComponent(track.replace(".mp3", ""));
     document.querySelector(".songtime").textContent = "00:00 / 00:00";
 
@@ -71,37 +61,28 @@ function playMusic(track, pause = false) {
     }
 }
 
+// ── displayAlbums() ─────────────────────────────
+// Ab folder listing nahi — songs.json se folders ki list lo
 async function displayAlbums() {
-    // ✅ Relative path
-    let response = await fetch(`/songs/`);
-    let htmlText = await response.text();
 
-    let tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlText;
-    let allLinks = tempDiv.getElementsByTagName("a");
+    // ✅ Root songs.json se folders ki list lo
+    let response = await fetch("/songs.json");
+    let data = await response.json();
+    let folders = data.folders; // ["ncs", "english"]
+
+    console.log("📁 Folders mile:", folders);
 
     let cardcontainer = document.querySelector(".cardcontainer");
     cardcontainer.innerHTML = "";
 
-    for (let link of allLinks) {
-        let href = link.getAttribute("href");
-        if (!href) continue;
-        if (!href.includes("/songs/")) continue;
-
-        let parts = href.split("/").filter(p => p !== "");
-        let folder = parts[parts.length - 1];
-        if (folder === "songs") continue;
-
-        console.log("📁 Folder mila:", folder);
-
+    for (let folder of folders) {
         try {
-            // ✅ Relative path
+            // Har folder ka info.json lo
             let infoRes = await fetch(`/songs/${folder}/info.json`);
             if (!infoRes.ok) {
                 console.log(`❌ info.json nahi mila: ${folder}`);
                 continue;
             }
-
             let info = await infoRes.json();
             console.log("✅ Card bana:", info.title);
 
@@ -118,17 +99,17 @@ async function displayAlbums() {
                     <p>${info.description}</p>
                 </div>
             `;
-
         } catch (err) {
             console.log(`Skip ${folder}:`, err.message);
         }
     }
 
+    // Card click → us folder ke songs sidebar mein load karo
     document.querySelectorAll(".card").forEach(card => {
         card.addEventListener("click", async () => {
             let folder = card.dataset.folder;
             console.log("🎵 Card clicked:", folder);
-            songs = await song_fetch(`songs/${folder}`);
+            songs = await song_fetch(folder);
             if (songs.length > 0) playMusic(songs[0], true);
         });
     });
@@ -145,11 +126,13 @@ function closeSidebar() {
 }
 
 async function main() {
-    songs = await song_fetch("songs/ncs");
+    // App start → pehle folder ke songs load karo
+    songs = await song_fetch("ncs");
     if (songs.length > 0) playMusic(songs[0], true);
 
     await displayAlbums();
 
+    // Play / Pause
     play.addEventListener("click", () => {
         if (currentSong.paused) {
             currentSong.play();
@@ -160,6 +143,7 @@ async function main() {
         }
     });
 
+    // Seekbar update
     currentSong.addEventListener("timeupdate", () => {
         if (isNaN(currentSong.duration)) return;
         document.querySelector(".songtime").innerHTML =
@@ -168,12 +152,14 @@ async function main() {
         document.querySelector(".circle_").style.left = percent + "%";
     });
 
+    // Seekbar click
     document.querySelector(".seekbar").addEventListener("click", (e) => {
         let percent = (e.offsetX / e.target.getBoundingClientRect().width) * 100;
         document.querySelector(".circle_").style.left = percent + "%";
         currentSong.currentTime = (currentSong.duration * percent) / 100;
     });
 
+    // Previous
     previous.addEventListener("click", () => {
         let currentTrack = currentSong.src.split("/").slice(-1)[0];
         let idx = songs.indexOf(currentTrack);
@@ -181,6 +167,7 @@ async function main() {
         else playMusic(songs[0]);
     });
 
+    // Next
     next.addEventListener("click", () => {
         let currentTrack = currentSong.src.split("/").slice(-1)[0];
         let idx = songs.indexOf(currentTrack);
@@ -188,10 +175,12 @@ async function main() {
         else playMusic(songs[0]);
     });
 
+    // Volume
     document.querySelector(".range input").addEventListener("input", (e) => {
         currentSong.volume = parseInt(e.target.value) / 100;
     });
 
+    // Mute / Unmute
     document.querySelector(".volume > img").addEventListener("click", (e) => {
         if (e.target.src.includes("volume.svg")) {
             e.target.src = e.target.src.replace("volume.svg", "mute.svg");
@@ -204,10 +193,12 @@ async function main() {
         }
     });
 
+    // Hamburger / Close / Overlay
     document.querySelector(".hamburger").addEventListener("click", openSidebar);
     document.querySelector(".close").addEventListener("click", closeSidebar);
     document.getElementById("overlay").addEventListener("click", closeSidebar);
 
+    // Auto next
     currentSong.addEventListener("ended", () => {
         let currentTrack = currentSong.src.split("/").slice(-1)[0];
         let idx = songs.indexOf(currentTrack);
@@ -215,6 +206,7 @@ async function main() {
         else playMusic(songs[0]);
     });
 
+    // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
         if (e.target.tagName === "INPUT") return;
         if (e.code === "Space") { e.preventDefault(); play.click(); }
