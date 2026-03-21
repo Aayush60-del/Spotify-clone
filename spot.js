@@ -134,17 +134,14 @@ async function displayAlbums() {
     });
 }
 
-// ✅ SEARCH FUNCTION
 function setupSearch() {
     const searchInput  = document.getElementById("searchInput");
     const searchResults = document.getElementById("searchResults");
     const searchClear  = document.getElementById("searchClear");
 
-    // Input pe type karne pe search karo
     searchInput.addEventListener("input", () => {
         let query = searchInput.value.trim().toLowerCase();
 
-        // Clear button show/hide
         if (query.length > 0) {
             searchClear.classList.add("visible");
         } else {
@@ -178,7 +175,7 @@ function setupSearch() {
                     </div>
                     <div class="search-result-play">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="black">
-                            <path d="M5 3l14 9-14 9V3z"/>
+                            <path d="M5 f3l14 9-14 9V3z"/>
                         </svg>
                     </div>
                 `;
