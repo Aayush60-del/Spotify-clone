@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify - Login</title>
     <link rel="stylesheet" href="login.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
     <div class="logo">
@@ -16,7 +19,8 @@
         <h1>Log in to Spotify</h1>
 
         <div class="divider">
-            <hr><span>or</span><hr>
+            <hr><span>or</span>
+            <hr>
         </div>
 
         <div class="error-msg" id="errorMsg"></div>
@@ -33,7 +37,7 @@
 
         <span class="forgot">Forgot your password?</span>
 
-        <button class="login-btn" id="loginBtn">Log In</button>
+        <button class="login-btn" id="loginBtn">Log In</button>        
 
         <div class="signup-link">
             Don't have an account? <a href="#">Sign up for Spotify</a>
@@ -50,4 +54,5 @@
 
     <script src="login.js"></script>
 </body>
+
 </html>
